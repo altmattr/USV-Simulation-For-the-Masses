@@ -18,5 +18,36 @@ This is the simplest way to use the software.  [Get a gitpod account (it is free
 
 In this demonstration, we will start a simulation, make the usv move in a circle, then stop the simulation.   We will write our program in Javascript.
 
+~~~~~
+// import the required libraries.
+//  * our own api for javascript access
 
-This repository contains a docker image to run a [vrx gazebo simulation](https://github.com/osrf/vrx). This simulation uses [ROS](http://wiki.ros.org) for communication. In addition, we use the [Rosbridge suite]((http://wiki.ros.org/rosbridge_suite)) to allow for communication between non-ros clients such as the browser or a [node](https://nodejs.org/en/) applicaiton.
+const { init, startSim } = require("../../apis/api.js");
+
+// connect to the simulation
+//  * tell the simulation what to run first (setup)
+//  * tell the simulation what to run over and over (act)
+const craft = init("ws://0.0.0.0:9090", setup, act);
+
+// Start the station_keeping simulation
+//  * need to first check there is not a simulation already running
+if(craft.getTaskInfo().name == "None"){
+  startSim("station_keeping", "http://0.0.0.0:8090");
+}
+
+// the function to run when the simulation starts
+function setup(){
+    console.log("setup is running")
+}
+
+// the function to run over and over during the simulation.
+function act(){
+    console.log("act is running")
+    craft.imm.setLeftThrusterPower(1);
+
+    // check each time to see if the simulation stopped, if it did, we can stop this application
+    if (craft.getTaskInfo().state === "finished"){
+        process.exit();
+    }
+}
+~~~~~
